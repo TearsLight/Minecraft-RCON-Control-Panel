@@ -9,6 +9,12 @@
 - **命令库** — 90+ Java 版命令，按类别分组，可搜索，点击查看详情和用法
 - **智能补全** — 类似游戏内 Tab 补全，支持参数提示（如 `/gamemode` → `creative|survival|adventure|spectator`）
 
+## 截图
+
+| 登录界面 | 运行界面 |
+|---|---|
+| ![登录界面](screenshots/login.png) | ![运行界面](screenshots/dashboard.png) |
+
 ## 技术栈
 
 | 层 | 技术 |
