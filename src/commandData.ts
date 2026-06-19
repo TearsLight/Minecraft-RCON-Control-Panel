@@ -1,4 +1,4 @@
-import { allItems } from './itemData';
+import { allItems } from './allData';
 
 export interface CommandParameter {
   type: 'literal' | 'choice' | 'string' | 'number' | 'player' | 'selector' | 'item' | 'entity' | 'block' | 'effect' | 'enchantment';

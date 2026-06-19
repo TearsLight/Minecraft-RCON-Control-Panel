@@ -1,11 +1,15 @@
 <template>
   <div class="flex flex-col h-full">
-    <!-- Search -->
+    <!-- Toggle + Search -->
+    <div class="flex items-center gap-2 mb-3">
+      <button @click="viewMode = 'items'" :class="['rounded-lg px-3 py-1.5 text-xs font-medium transition', viewMode === 'items' ? 'bg-cyan-500/15 text-cyan-300' : 'text-slate-500 hover:text-slate-300']">🎒 物品</button>
+      <button @click="viewMode = 'blocks'" :class="['rounded-lg px-3 py-1.5 text-xs font-medium transition', viewMode === 'blocks' ? 'bg-cyan-500/15 text-cyan-300' : 'text-slate-500 hover:text-slate-300']">🧱 方块</button>
+    </div>
     <div class="relative mb-4">
       <input
         v-model="searchQuery"
         type="text"
-        placeholder="搜索物品 ID 或名称..."
+        placeholder="搜索 ID 或名称..."
         class="w-full rounded-xl border border-slate-700/60 bg-slate-900/80 px-4 py-2.5 pl-10 text-sm text-slate-200 outline-none transition focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/10 backdrop-blur-xl"
       />
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -40,7 +44,7 @@
 
       <template v-else>
         <!-- 分类模式 -->
-        <div v-for="cat in itemCategories" :key="cat.key" class="mb-2">
+        <div v-for="cat in displayCategories" :key="cat.key" class="mb-2">
           <button
             @click="toggleCategory(cat.key)"
             class="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[11px] font-medium uppercase tracking-wider text-slate-400 transition hover:bg-slate-800/50"
@@ -76,7 +80,10 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref } from 'vue';
-import { itemCategories, allItems, ItemEntry } from '../itemData';
+import { itemCategories } from '../itemData';
+import { blockCategories } from '../blockData';
+import { allItems } from '../allData';
+import type { ItemEntry } from '../types';
 
 export default defineComponent({
   emits: ['insert-item'],
@@ -84,6 +91,11 @@ export default defineComponent({
     const searchQuery = ref('');
     const openCategory = ref<string | null>(null);
     const toast = ref('');
+    const viewMode = ref<'items' | 'blocks'>('items');
+
+    const displayCategories = computed(() => {
+      return viewMode.value === 'items' ? itemCategories : blockCategories;
+    });
 
     const filteredItems = computed(() => {
       const q = searchQuery.value.trim().toLowerCase();
@@ -103,6 +115,9 @@ export default defineComponent({
       for (const cat of itemCategories) {
         if (cat.items.some(i => i.id === id)) return cat.icon;
       }
+      for (const cat of blockCategories) {
+        if (cat.items.some(i => i.id === id)) return cat.icon;
+      }
       return '📦';
     };
 
@@ -120,7 +135,7 @@ export default defineComponent({
       }
     };
 
-    return { searchQuery, openCategory, filteredItems, filteredCount, itemCategories, toggleCategory, getCategoryIcon, copyItem, toast };
+    return { searchQuery, openCategory, filteredItems, filteredCount, displayCategories, viewMode, toggleCategory, getCategoryIcon, copyItem, toast };
   },
 });
 </script>

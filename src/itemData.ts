@@ -1,14 +1,6 @@
-export interface ItemEntry {
-  id: string;
-  name: string;
-}
+import type { ItemEntry, ItemCategory } from './types';
 
-export interface ItemCategory {
-  key: string;
-  label: string;
-  icon: string;
-  items: ItemEntry[];
-}
+export type { ItemEntry, ItemCategory };
 
 export const itemCategories: ItemCategory[] = [
   {
@@ -362,7 +354,8 @@ export const itemCategories: ItemCategory[] = [
 ];
 
 /** 所有物品扁平列表，用于搜索 */
-export const allItems: ItemEntry[] = itemCategories.flatMap(c => c.items);
+/** 所有物品的扁平列表（不含方块） */
+export const allItemEntries: ItemEntry[] = itemCategories.flatMap(c => c.items);
 
-/** 物品总数 */
-export const totalItemCount = allItems.length;
+/** 物品总数（不含方块） */
+export const totalItemOnlyCount = allItemEntries.length;
