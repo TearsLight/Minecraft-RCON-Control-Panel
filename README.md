@@ -11,9 +11,8 @@
 
 ## 截图
 
-| 登录界面 | 运行界面 |
-|---|---|
-| ![登录界面](screenshots/login.png) | ![运行界面](screenshots/dashboard.png) |
+![登录界面](screenshots/login.png) 
+![运行界面](screenshots/dashboard.png) |
 
 ## 技术栈
 
