@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MC RCON 控制台</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-icon">⛏️</span>
+        <div>
+          <h1>MC RCON 控制台</h1>
+          <p>登录后即可实时查看服务器日志与状态。</p>
+        </div>
+      </div>
+      <div id="session-status" class="session-status">未连接</div>
+    </div>
+
+    <main>
+      <section id="login-screen" class="panel center-panel">
+        <div class="login-card card">
+          <h2>登 录 RCON</h2>
+          <p>请输入服务器地址、端口和 RCON 密码进行连接。</p>
+          <form id="connect-form">
+            <label>
+              服务器地址
+              <input id="host" type="text" placeholder="localhost" required />
+            </label>
+            <label>
+              RCON 端口
+              <input id="port" type="number" placeholder="25575" required />
+            </label>
+            <label>
+              RCON 密码
+              <input id="password" type="password" placeholder="RCON 密码" required />
+            </label>
+            <button id="connect-btn" type="submit">连接服务器</button>
+          </form>
+          <div id="login-message" class="hint"></div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="dashboard hidden">
+        <div class="dashboard-grid">
+          <div class="side-panel">
+            <div class="card info-card">
+              <h3>服务器信息</h3>
+              <div class="info-row"><span>地址</span><span id="info-host">-</span></div>
+              <div class="info-row"><span>端口</span><span id="info-port">-</span></div>
+              <div class="info-row"><span>版本</span><span id="info-version">-</span></div>
+              <div class="info-row"><span>玩家</span><span id="info-player-count">-</span></div>
+            </div>
+
+            <div class="card info-card">
+              <h3>当前在线</h3>
+              <div id="player-list" class="player-list">暂无在线玩家</div>
+            </div>
+          </div>
+
+          <div class="center-panel">
+            <div class="card log-card">
+              <div class="card-title">
+                <h3>服务器日志</h3>
+                <button id="refresh-info" class="text-button">刷新状态</button>
+              </div>
+              <div id="log-output" class="log-output"></div>
+            </div>
+
+            <div class="card command-card">
+              <form id="command-form" class="command-form">
+                <label class="command-label" for="command">输入命令</label>
+                <input id="command" type="text" placeholder="例如：time set day" list="command-options" autocomplete="off" required />
+                <datalist id="command-options">
+                  <option value="list"></option>
+                  <option value="version"></option>
+                  <option value="time set day"></option>
+                  <option value="time set night"></option>
+                  <option value="weather clear"></option>
+                  <option value="weather rain"></option>
+                  <option value="say Hello from RCON"></option>
+                  <option value="gamerule doDaylightCycle false"></option>
+                  <option value="gamemode creative"></option>
+                </datalist>
+                <div class="command-actions">
+                  <button type="submit">执行</button>
+                  <button id="disconnect-btn" type="button" class="secondary">断开</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="side-panel">
+            <div class="card info-card">
+              <h3>控制面板</h3>
+              <button id="cmd-list" class="panel-button">列出玩家</button>
+              <button id="cmd-version" class="panel-button">查询版本</button>
+              <button id="cmd-time-day" class="panel-button">白天</button>
+              <button id="cmd-weather-clear" class="panel-button">晴天</button>
+            </div>
+            <div class="card info-card">
+              <h3>提示</h3>
+              <p>使用下方命令框输入命令，支持自动补全。连接后可查看服务器实时信息。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
