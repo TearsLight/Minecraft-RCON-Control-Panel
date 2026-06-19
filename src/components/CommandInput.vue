@@ -96,6 +96,9 @@ export default defineComponent({
     const highlightedIndex = ref(0);
     const isFocused = ref(false);
     const inputEl = ref<HTMLInputElement | null>(null);
+    const history = ref<string[]>([]);
+    const historyIndex = ref(-1);
+    const savedInput = ref('');
 
     const filteredSuggestions = computed<SuggestionItem[]>(() => {
       const val = command.value;
@@ -111,10 +114,8 @@ export default defineComponent({
     const selectSuggestion = (item: SuggestionItem) => {
       const val = command.value;
       if (item.type === 'command') {
-        // 替换整个命令名
         command.value = item.text + ' ';
       } else {
-        // 追加参数，替换最后一个部分
         const parts = val.split(/\s+/);
         if (parts.length > 1) {
           parts[parts.length - 1] = item.text;
@@ -124,25 +125,72 @@ export default defineComponent({
         }
       }
       highlightedIndex.value = 0;
+      historyIndex.value = -1;
       inputEl.value?.focus();
     };
 
     const handleKeydown = (e: KeyboardEvent) => {
       const max = filteredSuggestions.value.length;
+
+      // 无建议时：处理历史和回车
       if (max === 0) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (history.value.length === 0) return;
+          if (historyIndex.value === -1) {
+            savedInput.value = command.value;
+            historyIndex.value = history.value.length - 1;
+          } else if (historyIndex.value > 0) {
+            historyIndex.value--;
+          }
+          command.value = history.value[historyIndex.value];
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (historyIndex.value === -1) return;
+          if (historyIndex.value < history.value.length - 1) {
+            historyIndex.value++;
+            command.value = history.value[historyIndex.value];
+          } else {
+            historyIndex.value = -1;
+            command.value = savedInput.value;
+            savedInput.value = '';
+          }
+          return;
+        }
         if (e.key === 'Enter') {
           e.preventDefault();
           doSend();
+          return;
+        }
+        // 用户开始输入时退出历史模式
+        if (historyIndex.value !== -1 && e.key.length === 1) {
+          historyIndex.value = -1;
+          savedInput.value = '';
         }
         return;
       }
 
+      // 有建议时：建议导航优先，但空输入时 ArrowUp 进入历史
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         highlightedIndex.value = (highlightedIndex.value + 1) % max;
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        highlightedIndex.value = (highlightedIndex.value - 1 + max) % max;
+        if (command.value.trim() === '' || command.value === '/') {
+          // 空输入 → 进入历史模式
+          if (history.value.length === 0) return;
+          if (historyIndex.value === -1) {
+            savedInput.value = command.value;
+            historyIndex.value = history.value.length - 1;
+          } else if (historyIndex.value > 0) {
+            historyIndex.value--;
+          }
+          command.value = history.value[historyIndex.value];
+        } else {
+          highlightedIndex.value = (highlightedIndex.value - 1 + max) % max;
+        }
       } else if (e.key === 'Tab') {
         e.preventDefault();
         const idx = highlightedIndex.value;
@@ -156,13 +204,19 @@ export default defineComponent({
     };
 
     const onBlur = () => {
-      // 延迟关闭以允许点击建议
       setTimeout(() => { isFocused.value = false; }, 150);
     };
 
     const doSend = () => {
       const val = command.value.trim();
       if (!val) return;
+      // 添加到历史记录，避免连续重复
+      if (history.value.length === 0 || history.value[history.value.length - 1] !== val) {
+        history.value.push(val);
+        if (history.value.length > 50) history.value.shift();
+      }
+      historyIndex.value = -1;
+      savedInput.value = '';
       emit('send', val);
       command.value = '';
       highlightedIndex.value = 0;

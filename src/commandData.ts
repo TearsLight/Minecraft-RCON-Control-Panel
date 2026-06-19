@@ -1,5 +1,7 @@
+import { allItems } from './itemData';
+
 export interface CommandParameter {
-  type: 'literal' | 'choice' | 'string' | 'number' | 'player' | 'selector';
+  type: 'literal' | 'choice' | 'string' | 'number' | 'player' | 'selector' | 'item' | 'entity' | 'block' | 'effect' | 'enchantment';
   name: string;
   optional?: boolean;
   choices?: string[];
@@ -72,19 +74,19 @@ export const commandData: CommandEntry[] = [
   ] },
 
   // ── 物品与方块 ──
-  { name: '/give', description: '给予玩家物品', permission: 2, category: '物品与方块', syntax: '/give <玩家> <物品> [数量]', parameters: [{ type: 'player', name: '玩家' }, { type: 'string', name: '物品ID' }, { type: 'number', name: '数量', optional: true }] },
-  { name: '/clear', description: '清除玩家物品栏', permission: 2, category: '物品与方块', syntax: '/clear [玩家] [物品] [数量]', parameters: [{ type: 'player', name: '玩家', optional: true }, { type: 'string', name: '物品ID', optional: true }, { type: 'number', name: '数量', optional: true }] },
+  { name: '/give', description: '给予玩家物品', permission: 2, category: '物品与方块', syntax: '/give <玩家> <物品> [数量]', parameters: [{ type: 'player', name: '玩家' }, { type: 'item', name: '物品ID' }, { type: 'number', name: '数量', optional: true }] },
+  { name: '/clear', description: '清除玩家物品栏', permission: 2, category: '物品与方块', syntax: '/clear [玩家] [物品] [数量]', parameters: [{ type: 'player', name: '玩家', optional: true }, { type: 'item', name: '物品ID', optional: true }, { type: 'number', name: '数量', optional: true }] },
   { name: '/clone', description: '复制区域方块', permission: 2, category: '物品与方块', syntax: '/clone <起点> <终点> <目标> [模式]', parameters: [{ type: 'string', name: '起点坐标' }, { type: 'string', name: '终点坐标' }, { type: 'string', name: '目标坐标' }, { type: 'choice', name: '模式', optional: true, choices: ['replace', 'masked', 'filtered'] }] },
-  { name: '/fill', description: '填充区域方块', permission: 2, category: '物品与方块', syntax: '/fill <起点> <终点> <方块> [模式]', parameters: [{ type: 'string', name: '起点坐标' }, { type: 'string', name: '终点坐标' }, { type: 'string', name: '方块ID' }, { type: 'choice', name: '模式', optional: true, choices: ['destroy', 'hollow', 'keep', 'outline', 'replace'] }] },
+  { name: '/fill', description: '填充区域方块', permission: 2, category: '物品与方块', syntax: '/fill <起点> <终点> <方块> [模式]', parameters: [{ type: 'string', name: '起点坐标' }, { type: 'string', name: '终点坐标' }, { type: 'block', name: '方块ID' }, { type: 'choice', name: '模式', optional: true, choices: ['destroy', 'hollow', 'keep', 'outline', 'replace'] }] },
   { name: '/fillbiome', description: '设置区域生物群系', permission: 2, category: '物品与方块', syntax: '/fillbiome <起点> <终点> <群系>' },
-  { name: '/setblock', description: '放置/替换方块', permission: 2, category: '物品与方块', syntax: '/setblock <坐标> <方块> [模式]', parameters: [{ type: 'string', name: '坐标' }, { type: 'string', name: '方块ID' }, { type: 'choice', name: '模式', optional: true, choices: ['destroy', 'keep', 'replace'] }] },
+  { name: '/setblock', description: '放置/替换方块', permission: 2, category: '物品与方块', syntax: '/setblock <坐标> <方块> [模式]', parameters: [{ type: 'string', name: '坐标' }, { type: 'block', name: '方块ID' }, { type: 'choice', name: '模式', optional: true, choices: ['destroy', 'keep', 'replace'] }] },
   { name: '/item', description: '修改物品栏中的物品', permission: 2, category: '物品与方块', syntax: '/item (modify|replace) <目标> ...', parameters: [{ type: 'choice', name: '操作', choices: ['modify', 'replace'] }] },
   { name: '/loot', description: '生成战利品', permission: 2, category: '物品与方块', syntax: '/loot <操作> <目标> ...', parameters: [{ type: 'choice', name: '操作', choices: ['give', 'insert', 'spawn', 'replace'] }] },
   { name: '/recipe', description: '给予或剥夺合成配方', permission: 2, category: '物品与方块', syntax: '/recipe (give|take) <玩家> [配方]', parameters: [{ type: 'choice', name: '操作', choices: ['give', 'take'] }, { type: 'player', name: '玩家' }, { type: 'string', name: '配方', optional: true }] },
-  { name: '/enchant', description: '附魔玩家手持物品', permission: 2, category: '物品与方块', syntax: '/enchant <玩家> <魔咒> [等级]', parameters: [{ type: 'player', name: '玩家' }, { type: 'string', name: '魔咒ID' }, { type: 'number', name: '等级', optional: true }] },
+  { name: '/enchant', description: '附魔玩家手持物品', permission: 2, category: '物品与方块', syntax: '/enchant <玩家> <魔咒> [等级]', parameters: [{ type: 'player', name: '玩家' }, { type: 'enchantment', name: '魔咒ID' }, { type: 'number', name: '等级', optional: true }] },
 
   // ── 实体与生物 ──
-  { name: '/summon', description: '生成实体', permission: 2, category: '实体与生物', syntax: '/summon <实体ID> [坐标] [NBT]', parameters: [{ type: 'string', name: '实体ID' }, { type: 'string', name: '坐标', optional: true }] },
+  { name: '/summon', description: '生成实体', permission: 2, category: '实体与生物', syntax: '/summon <实体ID> [坐标] [NBT]', parameters: [{ type: 'entity', name: '实体ID' }, { type: 'string', name: '坐标', optional: true }] },
   { name: '/kill', description: '清除实体', permission: 2, category: '实体与生物', syntax: '/kill [目标]', parameters: [{ type: 'selector', name: '目标', optional: true }] },
   { name: '/damage', description: '对实体造成伤害', permission: 2, category: '实体与生物', syntax: '/damage <目标> <数值> [伤害类型]', parameters: [{ type: 'selector', name: '目标' }, { type: 'number', name: '伤害值' }, { type: 'string', name: '伤害类型', optional: true }] },
   { name: '/effect', description: '管理状态效果', permission: 2, category: '实体与生物', syntax: '/effect (give|clear) <目标> [效果] [秒] [等级] [隐藏粒子]', parameters: [
@@ -187,21 +189,18 @@ export const commandData: CommandEntry[] = [
 export function getAutocompleteSuggestions(input: string): { type: 'command' | 'parameter'; text: string; description?: string }[] {
   const trimmed = input.replace(/^\/+/, '').trim();
   if (!trimmed) {
-    // 空输入 → 显示所有命令
     return commandData.map(c => ({ type: 'command' as const, text: c.name, description: c.description }));
   }
 
   const parts = trimmed.split(/\s+/);
   const firstPart = parts[0].toLowerCase();
 
-  // 第一步：查找匹配的命令
   const matchedCommands = commandData.filter(c => {
     const cmdName = c.name.replace(/^\//, '').toLowerCase();
     const aliases = (c.aliases || []).map(a => a.replace(/^\//, '').toLowerCase());
     return cmdName.startsWith(firstPart) || aliases.some(a => a.startsWith(firstPart));
   });
 
-  // 如果只有一个命令精确匹配且后面有空格 → 显示参数建议
   if (parts.length > 1 && matchedCommands.length === 1) {
     const cmd = matchedCommands[0];
     const exactMatch =
@@ -209,30 +208,35 @@ export function getAutocompleteSuggestions(input: string): { type: 'command' | '
       (cmd.aliases || []).some(a => a.replace(/^\//, '').toLowerCase() === firstPart);
 
     if (exactMatch && cmd.parameters) {
-      // 已输入的参数数量（不包括命令名）
-      const argIndex = parts.length - 2; // 0-based into parameters
+      const argIndex = parts.length - 2;
       const param = cmd.parameters[argIndex];
 
       if (param && param.choices) {
         const currentArg = parts[parts.length - 1].toLowerCase();
         const matching = param.choices.filter(c => c.toLowerCase().startsWith(currentArg));
-        if (matching.length > 0) {
-          return matching.map(c => ({ type: 'parameter' as const, text: c, description: param.description }));
-        }
-        return param.choices.map(c => ({ type: 'parameter' as const, text: c, description: param.description }));
+        return matching.length > 0
+          ? matching.map(c => ({ type: 'parameter' as const, text: c, description: param.description }))
+          : param.choices.map(c => ({ type: 'parameter' as const, text: c, description: param.description }));
       }
 
-      if (param) {
-        // 没有 choices 的非可选参数 → 返回空（由用户自由输入）
-        return [];
+      // 智能补全：item / block / entity / effect / enchantment 类型从物品库搜索
+      if (param && (param.type === 'item' || param.type === 'block' || param.type === 'entity' || param.type === 'effect' || param.type === 'enchantment')) {
+        const currentArg = parts[parts.length - 1].toLowerCase();
+        const matching = allItems
+          .filter(item => item.id.toLowerCase().startsWith(currentArg) || item.name.includes(currentArg))
+          .slice(0, 10);
+        return matching.map(item => ({
+          type: 'parameter' as const,
+          text: item.id,
+          description: `${item.name}`,
+        }));
       }
 
-      // 如果是可选参数且没有更多定义 → 可能返回空
+      if (param) return [];
       return [];
     }
   }
 
-  // 否则显示命令建议（带语法预览）
   return matchedCommands.slice(0, 8).map(c => ({
     type: 'command' as const,
     text: c.name,
