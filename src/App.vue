@@ -1,25 +1,37 @@
 <template>
   <div class="app-background min-h-screen text-slate-100">
     <div class="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 px-4 py-4 lg:px-6">
-      <!-- ── Header ── -->
-      <header v-if="connected" class="rounded-2xl border border-slate-700/60 bg-slate-900/70 px-5 py-3 backdrop-blur-xl shadow-xl shadow-slate-950/20">
+      <!-- ── Header / Nav ── -->
+      <header v-if="connected" class="rounded-2xl border border-slate-700/60 bg-slate-900/70 px-5 py-2.5 backdrop-blur-xl shadow-xl shadow-slate-950/20">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/10 text-lg">
+          <div class="flex items-center gap-4">
+            <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-500/10 text-lg">
               🧊
             </div>
-            <div>
-              <h1 class="text-lg font-semibold text-slate-50">MC RCON 控制台</h1>
-              <p class="text-[11px] text-slate-400">
-                <span class="text-emerald-400">●</span> 已连接
-                <span class="font-mono text-slate-500 ml-1">{{ info.host }}:{{ info.port }}</span>
-              </p>
-            </div>
+            <nav class="flex items-center gap-1">
+              <button
+                @click="activeTab = 'console'"
+                :class="[
+                  'rounded-xl px-3.5 py-1.5 text-sm font-medium transition',
+                  activeTab === 'console'
+                    ? 'bg-cyan-500/15 text-cyan-300'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                ]"
+              >▸ 控制台</button>
+              <button
+                @click="activeTab = 'items'"
+                :class="[
+                  'rounded-xl px-3.5 py-1.5 text-sm font-medium transition',
+                  activeTab === 'items'
+                    ? 'bg-cyan-500/15 text-cyan-300'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                ]"
+              >📦 物品栏</button>
+            </nav>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-[11px] text-slate-500">
-              自动刷新 {{ refreshInterval }}s
-            </span>
+          <div class="flex items-center gap-3">
+            <span class="text-[11px] text-slate-500">{{ info.host }}:{{ info.port }}</span>
+            <span class="text-emerald-400 text-[11px]">● 在线</span>
           </div>
         </div>
       </header>
@@ -53,42 +65,29 @@
         </div>
       </section>
 
-      <!-- ── Dashboard ── -->
-      <template v-else>
-        <!-- Main grid: 3 columns -->
+      <!-- ── Console Tab ── -->
+      <template v-if="connected && activeTab === 'console'">
         <div class="grid flex-1 gap-4 lg:grid-cols-[260px_1fr_300px]">
-          <!-- Left: Server Info -->
           <div class="flex flex-col gap-4">
             <ServerInfoPanel :info="info" />
           </div>
-
-          <!-- Center: Console -->
-          <ConsolePanel
-            :logs="logs"
-            @refresh="refreshInfo"
-            @clear="logs = []"
-          />
-
-          <!-- Right: Command Library -->
+          <ConsolePanel :logs="logs" @refresh="refreshInfo" @clear="logs = []" />
           <CommandLibrary @select-command="openCommandDetail" />
         </div>
-
-        <!-- Bottom: Command Input -->
         <div class="sticky bottom-0 pb-2">
-          <CommandInput
-            ref="commandInputRef"
-            :commands="commandItems"
-            @send="sendCommand"
-            @disconnect="disconnect"
-          />
+          <CommandInput ref="commandInputRef" :commands="commandItems" @send="sendCommand" @disconnect="disconnect" />
         </div>
+        <CommandDetailModal :command="detailCommand" @close="detailCommand = null" @insert="insertCommand" />
+      </template>
 
-        <!-- Command Detail Modal -->
-        <CommandDetailModal
-          :command="detailCommand"
-          @close="detailCommand = null"
-          @insert="insertCommand"
-        />
+      <!-- ── Items Tab ── -->
+      <template v-if="connected && activeTab === 'items'">
+        <div class="flex-1 rounded-2xl border border-slate-700/60 bg-slate-900/70 p-5 backdrop-blur-xl shadow-xl shadow-slate-950/20">
+          <ItemLibrary @insert-item="insertItem" />
+        </div>
+        <div class="sticky bottom-0 pb-2">
+          <CommandInput ref="commandInputRef" :commands="commandItems" @send="sendCommand" @disconnect="disconnect" />
+        </div>
       </template>
     </div>
   </div>
@@ -103,6 +102,7 @@ import type { LogEntry } from './components/ConsolePanel.vue';
 import CommandLibrary from './components/CommandLibrary.vue';
 import CommandDetailModal from './components/CommandDetailModal.vue';
 import CommandInput from './components/CommandInput.vue';
+import ItemLibrary from './components/ItemLibrary.vue';
 
 interface PlayerInfo {
   total: number;
@@ -121,7 +121,7 @@ interface ServerInfo {
 }
 
 export default {
-  components: { ServerInfoPanel, ConsolePanel, CommandLibrary, CommandDetailModal, CommandInput },
+  components: { ServerInfoPanel, ConsolePanel, CommandLibrary, CommandDetailModal, CommandInput, ItemLibrary },
   setup() {
     const connected = ref(false);
     const host = ref('localhost');
@@ -133,6 +133,7 @@ export default {
     const info = ref<ServerInfo>({});
     const detailCommand = ref<CommandEntry | null>(null);
     const commandInputRef = ref<InstanceType<typeof CommandInput> | null>(null);
+    const activeTab = ref<'console' | 'items'>('console');
     const refreshInterval = 15;
     let intervalId: number | null = null;
 
@@ -242,7 +243,6 @@ export default {
     };
 
     const insertCommand = (cmdName: string) => {
-      // 调用 CommandInput 的 insertCommand 方法
       const inputComp = commandInputRef.value as any;
       if (inputComp && inputComp.insertCommand) {
         inputComp.insertCommand(cmdName);
@@ -250,11 +250,18 @@ export default {
       detailCommand.value = null;
     };
 
+    const insertItem = (itemId: string) => {
+      const inputComp = commandInputRef.value as any;
+      if (inputComp && inputComp.insertCommand) {
+        inputComp.insertCommand(itemId);
+      }
+    };
+
     return {
       connected, host, port, password, message, messageType,
-      logs, info, detailCommand, commandInputRef, commandItems, refreshInterval,
+      logs, info, detailCommand, commandInputRef, commandItems, activeTab, refreshInterval,
       login, refreshInfo, sendCommand, disconnect,
-      openCommandDetail, insertCommand,
+      openCommandDetail, insertCommand, insertItem,
     };
   },
 };
