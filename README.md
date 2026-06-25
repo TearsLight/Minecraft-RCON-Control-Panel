@@ -1,5 +1,5 @@
 # Minecraft RCON Control Panel
-[在线体验，注意服务器要有公网 IP！](https://cherrylanterns.cn/mcrcon/)
+[在线体验，注意服务器要有公网 IP！](https://cherrylanterns.cn/mcrcon/) <br>
 基于 Web 的 Minecraft 服务器远程管理控制台，通过 RCON 协议连接服务器，提供图形化的命令管理界面。
 
 ## 功能
