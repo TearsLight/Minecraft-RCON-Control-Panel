@@ -1,6 +1,6 @@
 {
   "name": "minecraft-rcon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "我的世界RCON远程控制前端页面",
   "license": "MIT",
   "author": "CherryLanterns",
@@ -10,7 +10,7 @@
     "serve": "node server.js",
     "dev:backend": "npm run serve",
     "dev:frontend": "wait-on http://localhost:8080 && vite",
-    "dev": "concurrently -k -n backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "chcp 65001 >nul && concurrently -k --raw -n backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "start": "node server.js"

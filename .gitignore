@@ -28,6 +28,9 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# User data
+data/custom-items.json
+
 # Misc
 *.tsbuildinfo
 

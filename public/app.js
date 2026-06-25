@@ -85,7 +85,7 @@ function updateInfoPanel(info) {
 
 async function loadServerInfo() {
   try {
-    const result = await request('/api/server-info');
+    const result = await request('/mcrcon/api/server-info');
     if (result.ok) {
       updateInfoPanel(result);
       createLogLine('已刷新服务器信息。');
@@ -97,7 +97,7 @@ async function loadServerInfo() {
 
 async function refreshStatus() {
   try {
-    const result = await request('/api/status');
+    const result = await request('/mcrcon/api/status');
     serverConnected = result.connected;
     if (serverConnected) {
       setSessionStatus(`已连接 ${result.info.host}:${result.info.port}`);
@@ -127,7 +127,7 @@ connectForm.addEventListener('submit', async (event) => {
   }
 
   try {
-    const result = await request('/api/connect', {
+    const result = await request('/mcrcon/api/connect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ host, port, password }),
@@ -157,7 +157,7 @@ commandForm.addEventListener('submit', async (event) => {
   }
 
   try {
-    const result = await request('/api/command', {
+    const result = await request('/mcrcon/api/command', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command }),
@@ -172,7 +172,7 @@ commandForm.addEventListener('submit', async (event) => {
 
 disconnectBtn.addEventListener('click', async () => {
   try {
-    const result = await request('/api/disconnect', { method: 'POST' });
+    const result = await request('/mcrcon/api/disconnect', { method: 'POST' });
     if (result.ok) {
       serverConnected = false;
       setSessionStatus('已断开', true);

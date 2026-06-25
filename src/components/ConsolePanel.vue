@@ -2,18 +2,18 @@
   <div class="console-panel flex flex-col rounded-2xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-xl shadow-xl shadow-slate-950/20 h-full">
     <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/40">
       <h2 class="flex items-center gap-2 text-base font-semibold text-slate-100">
-        <span class="text-cyan-400">▸</span> 控制台
+        <span class="text-cyan-400">▸</span> {{ t('nav.console') }}
       </h2>
       <div class="flex items-center gap-2">
-        <span class="text-[11px] text-slate-500">{{ logs.length }} 条记录</span>
+        <span class="text-[11px] text-slate-500">{{ logs.length }} {{ t('console.entries') }}</span>
         <button
           @click="$emit('clear')"
           class="rounded-lg bg-slate-800 px-2.5 py-1 text-[11px] text-slate-400 transition hover:bg-slate-700 hover:text-slate-200"
-        >清空</button>
+        >{{ t('console.clear') }}</button>
         <button
           @click="$emit('refresh')"
           class="rounded-lg bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-400 transition hover:bg-cyan-500/20"
-        >刷新</button>
+        >{{ t('console.refresh') }}</button>
       </div>
     </div>
 
@@ -24,7 +24,7 @@
       <div v-if="logs.length === 0" class="flex h-full items-center justify-center text-slate-600">
         <div class="text-center">
           <div class="text-4xl mb-2">▸</div>
-          <p class="text-xs">等待命令输出...</p>
+          <p class="text-xs">{{ t('console.waiting') }}</p>
         </div>
       </div>
 
@@ -40,6 +40,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, nextTick } from 'vue';
+import { t } from '../i18n';
 
 export interface LogEntry {
   text: string;
@@ -73,7 +74,7 @@ export default defineComponent({
       'text-rose-300': item.type === 'error',
     });
 
-    return { consoleBody, lineClass };
+    return { consoleBody, lineClass, t };
   },
 });
 </script>
@@ -88,19 +89,10 @@ export default defineComponent({
   scroll-behavior: smooth;
 }
 
-.console-body::-webkit-scrollbar {
-  width: 6px;
-}
-.console-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-.console-body::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.15);
-  border-radius: 3px;
-}
-.console-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.3);
-}
+.console-body::-webkit-scrollbar { width: 6px; }
+.console-body::-webkit-scrollbar-track { background: transparent; }
+.console-body::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.15); border-radius: 3px; }
+.console-body::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.3); }
 
 .console-line {
   padding: 1px 0;

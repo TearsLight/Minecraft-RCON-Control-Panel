@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const { Rcon } = require('rcon-client');
 
@@ -7,19 +8,26 @@ const port = process.env.PORT || 8080;
 
 let rcon = null;
 let connectionInfo = null;
+let closingRcon = false;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use('/mcrcon', express.static(path.join(__dirname, 'dist')));
 
 async function closeRcon() {
-  if (!rcon) return;
+  if (!rcon || closingRcon) return;
+  closingRcon = true;
   try {
     await rcon.end();
   } catch (error) {
-    console.warn('RCON close error:', error.message || error);
+    const msg = error.message || error;
+    if (!/End called twice|Not connected/i.test(msg)) {
+      console.warn('RCON close error:', msg);
+    }
+  } finally {
+    rcon = null;
+    connectionInfo = null;
+    closingRcon = false;
   }
-  rcon = null;
-  connectionInfo = null;
 }
 
 function parsePlayerList(raw) {
@@ -102,7 +110,7 @@ function parseMods(raw) {
   return mods.length > 0 ? mods : null;
 }
 
-app.post('/api/connect', async (req, res) => {
+app.post('/mcrcon/api/connect', async (req, res) => {
   const { host, port: portValue, password } = req.body;
   if (!host || !portValue || !password) {
     return res.status(400).json({ error: 'host、port、password 都不能为空' });
@@ -131,7 +139,7 @@ app.post('/api/connect', async (req, res) => {
   }
 });
 
-app.post('/api/command', async (req, res) => {
+app.post('/mcrcon/api/command', async (req, res) => {
   const { command } = req.body;
   if (!rcon) {
     return res.status(400).json({ error: '尚未连接 RCON' });
@@ -148,7 +156,7 @@ app.post('/api/command', async (req, res) => {
   }
 });
 
-app.post('/api/disconnect', async (req, res) => {
+app.post('/mcrcon/api/disconnect', async (req, res) => {
   if (!rcon) {
     return res.status(400).json({ error: '当前没有连接' });
   }
@@ -161,7 +169,7 @@ app.post('/api/disconnect', async (req, res) => {
   }
 });
 
-app.get('/api/server-info', async (req, res) => {
+app.get('/mcrcon/api/server-info', async (req, res) => {
   if (!rcon) {
     return res.status(400).json({ error: '未连接 RCON' });
   }
@@ -187,6 +195,9 @@ app.get('/api/server-info', async (req, res) => {
     if (!modsRaw) modsRaw = await tryCommand('fabric mods');
     const mods = parseMods(modsRaw);
 
+    // 尝试获取世界种子
+    const seedRaw = await tryCommand('seed');
+
     res.json({
       ok: true,
       players,
@@ -194,11 +205,13 @@ app.get('/api/server-info', async (req, res) => {
       tps: tps || undefined,
       mspt: mspt || undefined,
       mods: mods || undefined,
+      seed: seedRaw || undefined,
       raw: {
         list: listRaw,
         version: versionRaw || undefined,
         tps: tpsRaw || undefined,
         mods: modsRaw || undefined,
+        seed: seedRaw || undefined,
       },
     });
   } catch (error) {
@@ -206,12 +219,99 @@ app.get('/api/server-info', async (req, res) => {
   }
 });
 
-app.get('*', (req, res) => {
+// ── Custom Items Persistence (always stored as groups) ──
+const CUSTOM_ITEMS_PATH = path.join(__dirname, 'data', 'custom-items.json');
+
+function readGroups() {
+  try {
+    if (!fs.existsSync(CUSTOM_ITEMS_PATH)) return [];
+    const data = JSON.parse(fs.readFileSync(CUSTOM_ITEMS_PATH, 'utf-8'));
+    if (!Array.isArray(data)) return [];
+    // Migrate old flat format: [{id, name, mod}] → groups
+    if (data.length > 0 && !data[0].items) {
+      const map = {};
+      for (const item of data) {
+        const m = item.mod || '未知Mod';
+        if (!map[m]) map[m] = { mod: m, items: [] };
+        map[m].items.push({ id: item.id, name: item.name });
+      }
+      const migrated = Object.values(map);
+      writeGroups(migrated); // persist migration
+      return migrated;
+    }
+    return data;
+  } catch { return []; }
+}
+
+function writeGroups(groups) {
+  const dir = path.dirname(CUSTOM_ITEMS_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(CUSTOM_ITEMS_PATH, JSON.stringify(groups, null, 2), 'utf-8');
+}
+
+app.get('/mcrcon/api/custom-items', (req, res) => {
+  try {
+    res.json({ ok: true, groups: readGroups() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/mcrcon/api/custom-items', (req, res) => {
+  const { mod, items } = req.body;
+  if (!mod || !mod.trim()) {
+    return res.status(400).json({ error: 'Mod 名称不能为空' });
+  }
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: '物品列表不能为空' });
+  }
+  for (const item of items) {
+    if (!item.id || !item.name) {
+      return res.status(400).json({ error: '每个物品必须包含 id 和 name' });
+    }
+  }
+  try {
+    const groups = readGroups();
+    if (groups.some(g => g.mod === mod.trim())) {
+      return res.status(400).json({ error: 'Mod 名称重复，请使用不同的名称' });
+    }
+    const newGroup = { mod: mod.trim(), items: items.map(it => ({ id: it.id.trim(), name: it.name.trim() })) };
+    groups.push(newGroup);
+    writeGroups(groups);
+    res.json({ ok: true, groups });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/mcrcon/api/custom-items', (req, res) => {
+  const { mod } = req.body;
+  if (!mod) return res.status(400).json({ error: 'Mod 名称不能为空' });
+  try {
+    let groups = readGroups();
+    groups = groups.filter(g => g.mod !== mod);
+    writeGroups(groups);
+    res.json({ ok: true, groups });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 根路径重定向到 /mcrcon
+app.get('/', (req, res) => {
+  res.redirect('/mcrcon/');
+});
+
+// SPA fallback: serve index.html for all /mcrcon routes
+app.get('/mcrcon', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+app.get('/mcrcon/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-const server = app.listen(port, () => {
-  console.log(`Server listening on http://localhost:${port}`);
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`Server listening on http://0.0.0.0:${port}`);
 });
 
 server.on('error', (error) => {

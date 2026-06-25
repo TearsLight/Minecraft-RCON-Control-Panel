@@ -7,7 +7,7 @@
     >
       <div class="px-3 py-1.5 border-b border-slate-700/50">
         <span class="text-[10px] text-slate-500 uppercase tracking-widest">
-          {{ suggestionsAreParams ? '参数建议' : '命令建议' }}
+          {{ suggestionsAreParams ? t('cmdInput.paramHint') : t('cmdInput.cmdHint') }}
         </span>
       </div>
       <div class="max-h-[200px] overflow-y-auto">
@@ -22,19 +22,14 @@
             idx === highlightedIndex ? 'bg-cyan-500/10 border-cyan-400/20' : 'hover:bg-slate-800/50'
           ]"
         >
-          <!-- Icon -->
           <span
             class="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[11px]"
             :class="item.type === 'parameter' ? 'bg-amber-500/10 text-amber-400' : 'bg-cyan-500/10 text-cyan-400'"
-          >
-            {{ item.type === 'parameter' ? '¶' : '/' }}
-          </span>
-          <!-- Content -->
+          >{{ item.type === 'parameter' ? '¶' : '/' }}</span>
           <div class="min-w-0 flex-1">
             <div class="font-mono text-[12px] text-slate-200">{{ item.text }}</div>
             <div v-if="item.description" class="text-[11px] text-slate-500 truncate mt-0.5">{{ item.description }}</div>
           </div>
-          <!-- Keyboard hint on first item -->
           <span v-if="idx === 0" class="shrink-0 text-[9px] text-slate-600 border border-slate-700 rounded px-1 py-0.5">Tab</span>
         </button>
       </div>
@@ -42,10 +37,7 @@
 
     <!-- Input bar -->
     <div class="flex gap-2 rounded-2xl border border-slate-700/60 bg-slate-900/80 p-2 backdrop-blur-xl shadow-xl shadow-slate-950/20">
-      <!-- Prompt -->
       <span class="flex items-center pl-2 font-mono text-sm text-cyan-400 select-none">&gt;</span>
-
-      <!-- Input field -->
       <input
         ref="inputEl"
         v-model="command"
@@ -57,28 +49,19 @@
         autocapitalize="off"
         spellcheck="false"
         type="text"
-        placeholder="输入命令，如 /gamemode creative ..."
+        :placeholder="t('cmdInput.placeholder')"
         class="flex-1 bg-transparent py-2 text-sm font-mono text-slate-100 outline-none placeholder:text-slate-600"
       />
-
-      <!-- Send button -->
-      <button
-        @click="doSend"
-        class="shrink-0 rounded-xl bg-cyan-500/90 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 active:scale-[0.98]"
-      >执行</button>
-
-      <!-- Disconnect -->
-      <button
-        @click="$emit('disconnect')"
-        class="shrink-0 rounded-xl bg-slate-800 px-4 py-2 text-sm text-slate-400 transition hover:bg-slate-700 hover:text-slate-200"
-      >断开</button>
+      <button @click="doSend" class="shrink-0 rounded-xl bg-cyan-500/90 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 active:scale-[0.98]">{{ t('cmdInput.execute') }}</button>
+      <button @click="$emit('disconnect')" class="shrink-0 rounded-xl bg-slate-800 px-4 py-2 text-sm text-slate-400 transition hover:bg-slate-700 hover:text-slate-200">{{ t('cmdInput.disconnect') }}</button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, ref, PropType } from 'vue';
-import { getAutocompleteSuggestions, CommandEntry } from '../commandData';
+import { getAutocompleteSuggestions, CommandEntry } from '../data/commandData';
+import { t } from '../i18n';
 
 interface SuggestionItem {
   type: 'command' | 'parameter';
@@ -103,8 +86,7 @@ export default defineComponent({
     const filteredSuggestions = computed<SuggestionItem[]>(() => {
       const val = command.value;
       if (!val || !val.startsWith('/')) return [];
-      const results = getAutocompleteSuggestions(val);
-      return results.slice(0, 8);
+      return getAutocompleteSuggestions(val).slice(0, 8);
     });
 
     const suggestionsAreParams = computed(() => {
@@ -131,86 +113,44 @@ export default defineComponent({
 
     const handleKeydown = (e: KeyboardEvent) => {
       const max = filteredSuggestions.value.length;
-
-      // 无建议时：处理历史和回车
       if (max === 0) {
         if (e.key === 'ArrowUp') {
           e.preventDefault();
           if (history.value.length === 0) return;
-          if (historyIndex.value === -1) {
-            savedInput.value = command.value;
-            historyIndex.value = history.value.length - 1;
-          } else if (historyIndex.value > 0) {
-            historyIndex.value--;
-          }
+          if (historyIndex.value === -1) { savedInput.value = command.value; historyIndex.value = history.value.length - 1; }
+          else if (historyIndex.value > 0) { historyIndex.value--; }
           command.value = history.value[historyIndex.value];
           return;
         }
         if (e.key === 'ArrowDown') {
           e.preventDefault();
           if (historyIndex.value === -1) return;
-          if (historyIndex.value < history.value.length - 1) {
-            historyIndex.value++;
-            command.value = history.value[historyIndex.value];
-          } else {
-            historyIndex.value = -1;
-            command.value = savedInput.value;
-            savedInput.value = '';
-          }
+          if (historyIndex.value < history.value.length - 1) { historyIndex.value++; command.value = history.value[historyIndex.value]; }
+          else { historyIndex.value = -1; command.value = savedInput.value; savedInput.value = ''; }
           return;
         }
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          doSend();
-          return;
-        }
-        // 用户开始输入时退出历史模式
-        if (historyIndex.value !== -1 && e.key.length === 1) {
-          historyIndex.value = -1;
-          savedInput.value = '';
-        }
+        if (e.key === 'Enter') { e.preventDefault(); doSend(); return; }
+        if (historyIndex.value !== -1 && e.key.length === 1) { historyIndex.value = -1; savedInput.value = ''; }
         return;
       }
-
-      // 有建议时：建议导航优先，但空输入时 ArrowUp 进入历史
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        highlightedIndex.value = (highlightedIndex.value + 1) % max;
-      } else if (e.key === 'ArrowUp') {
+      if (e.key === 'ArrowDown') { e.preventDefault(); highlightedIndex.value = (highlightedIndex.value + 1) % max; }
+      else if (e.key === 'ArrowUp') {
         e.preventDefault();
         if (command.value.trim() === '' || command.value === '/') {
-          // 空输入 → 进入历史模式
           if (history.value.length === 0) return;
-          if (historyIndex.value === -1) {
-            savedInput.value = command.value;
-            historyIndex.value = history.value.length - 1;
-          } else if (historyIndex.value > 0) {
-            historyIndex.value--;
-          }
+          if (historyIndex.value === -1) { savedInput.value = command.value; historyIndex.value = history.value.length - 1; }
+          else if (historyIndex.value > 0) { historyIndex.value--; }
           command.value = history.value[historyIndex.value];
-        } else {
-          highlightedIndex.value = (highlightedIndex.value - 1 + max) % max;
-        }
-      } else if (e.key === 'Tab') {
-        e.preventDefault();
-        const idx = highlightedIndex.value;
-        if (idx >= 0 && idx < max) {
-          selectSuggestion(filteredSuggestions.value[idx]);
-        }
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        doSend();
-      }
+        } else { highlightedIndex.value = (highlightedIndex.value - 1 + max) % max; }
+      } else if (e.key === 'Tab') { e.preventDefault(); const idx = highlightedIndex.value; if (idx >= 0 && idx < max) selectSuggestion(filteredSuggestions.value[idx]); }
+      else if (e.key === 'Enter') { e.preventDefault(); doSend(); }
     };
 
-    const onBlur = () => {
-      setTimeout(() => { isFocused.value = false; }, 150);
-    };
+    const onBlur = () => { setTimeout(() => { isFocused.value = false; }, 150); };
 
     const doSend = () => {
       const val = command.value.trim();
       if (!val) return;
-      // 添加到历史记录，避免连续重复
       if (history.value.length === 0 || history.value[history.value.length - 1] !== val) {
         history.value.push(val);
         if (history.value.length > 50) history.value.shift();
@@ -228,32 +168,13 @@ export default defineComponent({
       isFocused.value = true;
     };
 
-    return {
-      command,
-      highlightedIndex,
-      isFocused,
-      filteredSuggestions,
-      suggestionsAreParams,
-      selectSuggestion,
-      handleKeydown,
-      onBlur,
-      doSend,
-      insertCommand,
-      inputEl,
-    };
+    return { command, highlightedIndex, isFocused, filteredSuggestions, suggestionsAreParams, selectSuggestion, handleKeydown, onBlur, doSend, insertCommand, inputEl, t };
   },
 });
 </script>
 
 <style scoped>
-.suggestion-dropdown::-webkit-scrollbar {
-  width: 5px;
-}
-.suggestion-dropdown::-webkit-scrollbar-track {
-  background: transparent;
-}
-.suggestion-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.15);
-  border-radius: 3px;
-}
+.suggestion-dropdown::-webkit-scrollbar { width: 5px; }
+.suggestion-dropdown::-webkit-scrollbar-track { background: transparent; }
+.suggestion-dropdown::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.15); border-radius: 3px; }
 </style>
