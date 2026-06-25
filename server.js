@@ -4,7 +4,7 @@ const path = require('path');
 const { Rcon } = require('rcon-client');
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 7000;
 
 let rcon = null;
 let connectionInfo = null;

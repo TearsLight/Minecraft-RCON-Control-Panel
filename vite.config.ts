@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     host: '0.0.0.0',
     proxy: {
       '/mcrcon/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:7000',
         changeOrigin: true,
       },
     },

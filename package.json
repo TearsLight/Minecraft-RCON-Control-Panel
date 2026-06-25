@@ -9,7 +9,7 @@
   "scripts": {
     "serve": "node server.js",
     "dev:backend": "npm run serve",
-    "dev:frontend": "wait-on http://localhost:8080 && vite",
+    "dev:frontend": "wait-on http://localhost:7000 && vite",
     "dev": "chcp 65001 >nul && concurrently -k --raw -n backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
