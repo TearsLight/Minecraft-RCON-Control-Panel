@@ -11,6 +11,7 @@ let connectionInfo = null;
 let closingRcon = false;
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'dist')));
 app.use('/mcrcon', express.static(path.join(__dirname, 'dist')));
 
 async function closeRcon() {
@@ -297,12 +298,10 @@ app.delete('/mcrcon/api/custom-items', (req, res) => {
   }
 });
 
-// 根路径重定向到 /mcrcon
+// SPA fallback: serve index.html for root and /mcrcon routes
 app.get('/', (req, res) => {
-  res.redirect('/mcrcon/');
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
-
-// SPA fallback: serve index.html for all /mcrcon routes
 app.get('/mcrcon', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
