@@ -93,6 +93,14 @@ function parseMSPT(raw) {
   return null;
 }
 
+/** 尝试解析世界种子（提取纯数字） */
+function parseSeed(raw) {
+  if (!raw || isErrorResponse(raw)) return null;
+  // Minecraft /seed 返回 "Seed: [-3150894598531538528]" 或 "Seed: 12345"
+  const match = String(raw).match(/Seed:\s*\[?(-?\d+)\]?/i);
+  return match ? match[1] : null;
+}
+
 /** 尝试解析 mod 列表 */
 function parseMods(raw) {
   if (!raw || isErrorResponse(raw)) return null;
@@ -198,6 +206,7 @@ app.get('/mcrcon/api/server-info', async (req, res) => {
 
     // 尝试获取世界种子
     const seedRaw = await tryCommand('seed');
+    const seed = parseSeed(seedRaw);
 
     res.json({
       ok: true,
@@ -206,7 +215,7 @@ app.get('/mcrcon/api/server-info', async (req, res) => {
       tps: tps || undefined,
       mspt: mspt || undefined,
       mods: mods || undefined,
-      seed: seedRaw || undefined,
+      seed: seed || undefined,
       raw: {
         list: listRaw,
         version: versionRaw || undefined,

@@ -143,10 +143,12 @@ export default defineComponent({
     const seedMapUrl = computed(() => {
       const seed = props.info.seed;
       if (!seed) return '#';
+      // 兜底：如果 seed 含有 "Seed: [...]" 前缀，提取纯数字
+      const seedNum = String(seed).match(/(-?\d+)/)?.[1] || seed;
       const version = props.info.version || '';
       const mcMatch = version.match(/(\d+\.\d+(?:\.\d+)?)/);
       const platform = mcMatch ? `java_${mcMatch[1]}` : 'java_1.21.1';
-      return `https://minecraftsearch.com/zh-CN/%E5%B7%A5%E5%85%B7/%E7%A7%8D%E5%AD%90%E5%9C%B0%E5%9B%BE#seed=${seed}&platform=${platform}&dimension=overworld&x=0&z=0&zoom=13`;
+      return `https://minecraftsearch.com/zh-CN/%E5%B7%A5%E5%85%B7/%E7%A7%8D%E5%AD%90%E5%9C%B0%E5%9B%BE#seed=${seedNum}&platform=${platform}&dimension=overworld&x=0&z=0&zoom=13`;
     });
 
     return { playerPercentage, tpsColorClass, msptColorClass, seedMapUrl, t };
