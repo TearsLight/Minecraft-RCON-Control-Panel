@@ -5,8 +5,8 @@ node_modules/
 dist/
 
 # Compiled TypeScript leftovers (Vite handles this, tsc may leave artifacts)
-src/*.js
-src/*.js.map
+src/**/*.js
+src/**/*.js.map
 
 # IDE
 .vscode/
