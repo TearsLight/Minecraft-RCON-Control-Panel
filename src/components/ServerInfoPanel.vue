@@ -36,20 +36,14 @@
       </div>
 
       <!-- 世界种子 -->
-      <div v-if="info.seed" class="flex flex-col gap-1 rounded-xl bg-slate-950/60 px-3 py-2 text-xs">
-        <div class="flex items-center justify-between">
-          <span class="text-slate-400">{{ t('serverInfo.seed') }}</span>
-          <span class="font-mono text-slate-200">{{ info.seed }}</span>
-        </div>
+      <div v-if="info.seed" class="flex items-center gap-1 rounded-xl bg-slate-950/60 px-3 py-2 text-xs">
+        <span class="text-slate-400">{{ t('serverInfo.seed') }}:</span>
         <a
           :href="seedMapUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 self-end text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors"
-        >
-          <span>🗺 {{ t('serverInfo.seedMap') }}</span>
-          <span class="text-[10px]">↗</span>
-        </a>
+          class="font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
+        >{{ info.seed }}</a>
       </div>
 
       <!-- TPS（如果可用） -->
@@ -149,14 +143,10 @@ export default defineComponent({
     const seedMapUrl = computed(() => {
       const seed = props.info.seed;
       if (!seed) return '#';
-      const params = new URLSearchParams();
-      params.set('seed', seed);
-      params.set('platform', 'java_1.21.1');
-      params.set('dimension', 'overworld');
-      params.set('x', '0');
-      params.set('z', '0');
-      params.set('zoom', '13');
-      return `https://minecraftsearch.com/zh-CN/%E5%B7%A5%E5%85%B7/%E7%A7%8D%E5%AD%90%E5%9C%B0%E5%9B%BE#${params.toString()}`;
+      const version = props.info.version || '';
+      const mcMatch = version.match(/(\d+\.\d+(?:\.\d+)?)/);
+      const platform = mcMatch ? `java_${mcMatch[1]}` : 'java_1.21.1';
+      return `https://minecraftsearch.com/zh-CN/%E5%B7%A5%E5%85%B7/%E7%A7%8D%E5%AD%90%E5%9C%B0%E5%9B%BE#seed=${seed}&platform=${platform}&dimension=overworld&x=0&z=0&zoom=13`;
     });
 
     return { playerPercentage, tpsColorClass, msptColorClass, seedMapUrl, t };
